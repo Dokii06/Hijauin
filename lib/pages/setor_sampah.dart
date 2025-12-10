@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'edit_alamat.dart';
+import 'jenis_sampah.dart';
 
 // Warna Identitas Hijauin (disinkronkan)
 const Color primaryBlue = Color(0xFF143D60); // Biru Tua
@@ -7,7 +9,6 @@ const Color lightLime = Color(0xFFBFD98A); // Hijau Kekuningan
 const Color accentLime = Color(0xFFDDEB9D); // Hijau Muda Terang
 const Color backgroundLight = Color(0xFFF7F7F7); // Warna latar belakang kartu
 const Color lightGreenCard = Color(0xFFF2F9D4); // Warna latar belakang kartu
-// Warna Biru Aksen di Header (dari stops 0.88)
 const Color headerAccentBlue = Color(0xFF297EC6);
 
 class SetorSampahPage extends StatefulWidget {
@@ -20,6 +21,10 @@ class SetorSampahPage extends StatefulWidget {
 class _SetorSampahPageState extends State<SetorSampahPage> {
   // State Placeholder
   String selectedAddressType = 'Rumah';
+  String alamat = 'Jl. Merpati No. 45, Jakarta';
+  bool alamatTerisi = false;
+  bool jenisTerisi = false;
+  bool beratTerisi = false;
   // Data dummy untuk Detail Item
   final List<Map<String, dynamic>> trashItems = [
     {
@@ -96,50 +101,43 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
                     const SizedBox(height: 12),
 
                     // --- 4. DETAIL SETORAN ---
-                    _buildSectionTitle('Detail Setoran'),
                     _buildDetailSummary(trashItems, trashSizes, totalPoin),
 
                     const SizedBox(height: 20),
 
-                    // Tombol Cari Kurir (Lebar Penuh dengan Gaya Baru)
-                    Container(
-                      // Menghilangkan 'mainAxisAlignment' yang tidak valid di Container
-                      width: double
-                          .infinity, // Mengganti width: 365 agar responsif
-                      height: 55, // Tinggi tombol
-                      // Menggunakan 'Center' jika Anda ingin Container ini diposisikan di tengah
-                      // Namun, karena tombol di dalam Container sudah menggunakan width: infinity,
-                      // tombol sudah mengambil lebar penuh. Center tidak diperlukan kecuali
-                      // Container ini berada di parent yang alignmentnya non-start.
-                      // Karena tombol ini sudah di dalam Align(Alignment.bottomCenter) parent, kita hanya perlu Container.
-                      child: ElevatedButton(
-                        onPressed: () {
-                          // Navigasi ke halaman Cari Kurir (misalnya: CariKurirPage)
-                          // Navigator.push(context, MaterialPageRoute(builder: (_) => const CariKurirPage()));
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primaryBlue,
-                          elevation: 6,
-                          // Menggunakan radius yang lebih besar (12) untuk sudut melengkung
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                    // --- 5. TOMBOL CARI KURIR ---
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      child: Container(
+                        width: double.infinity,
+                        height: 55,
+                        child: ElevatedButton(
+                          onPressed:
+                              (alamatTerisi && jenisTerisi && beratTerisi)
+                              ? () {
+                                  print("Cari Kurir Aktif!");
+                                }
+                              : null,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: primaryBlue,
+                            elevation: 6,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                           ),
-                          // Padding diatur melalui Container height, tidak perlu di styleFrom
-                        ),
-                        child: const Text(
-                          'Cari Kurir',
-                          style: TextStyle(
-                            fontSize: 18,
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
+                          child: const Text(
+                            'Cari Kurir',
+                            style: TextStyle(
+                              fontSize: 18,
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                       ),
                     ),
 
-                    const SizedBox(
-                      height: 140,
-                    ), // Padding untuk tombol di bawah
+                    const SizedBox(height: 140),
                   ],
                 ),
               ),
@@ -329,10 +327,17 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
   Widget _buildTypeButton(String label) {
     bool isSelected = selectedAddressType == label;
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedAddressType = label;
-        });
+      onTap: () async {
+        final result = await Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PilihJenisSampahPage()),
+        );
+
+        if (result != null) {
+          setState(() {
+            jenisTerisi = true;
+          });
+        }
       },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
@@ -359,33 +364,40 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
   Widget _buildAddressCard() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        // Menggunakan warna yang lebih cerah seperti di gambar
-        decoration: BoxDecoration(
-          color: lightGreenCard,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: darkTeal.withOpacity(0.3)),
-        ),
-        child: const Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Jalan Mawar Indah 3 No.51',
-              style: TextStyle(
-                fontSize: 16,
-                color: primaryBlue,
-                fontWeight: FontWeight.w600,
+      child: GestureDetector(
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const EditAlamatPage()),
+          );
+
+          if (result != null) {
+            setState(() {
+              alamat = result;
+              alamatTerisi = true;
+            });
+          }
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: lightGreenCard,
+            borderRadius: BorderRadius.circular(10),
+            border: Border.all(color: darkTeal.withOpacity(0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                alamat,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: primaryBlue,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
-            ),
-            SizedBox(height: 5),
-            Text(
-              'Jl. Mawar Indah 3 Blok P1 No.51, RT.01/RW.02, Desa Bunga Indah, Kec. Harum Wangi, Kabupaten Bekasi, Jawa Barat, 16870, Indonesia',
-              style: TextStyle(fontSize: 12, color: darkTeal),
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -499,7 +511,6 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
     List<Map<String, dynamic>> sizes,
     int totalPoin,
   ) {
-    // Gabungkan item dan ukurannya untuk rincian
     final rincian = [
       {
         'name': 'Botol Plastik',
@@ -523,8 +534,21 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
           border: Border.all(color: darkTeal.withOpacity(0.3)),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Rincian Item dan Harga
+            const Padding(
+              padding: EdgeInsets.only(bottom: 8.0),
+              child: Text(
+                'Detail Setoran',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: primaryBlue,
+                  fontWeight: FontWeight.w900,
+                ),
+              ),
+            ),
+
+            // ✅ RINCIAN ITEM
             ...rincian.map(
               (r) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0),
@@ -533,26 +557,32 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
                   children: [
                     Text(
                       '${r['name']} ${r['quantity']} Kg',
-                      style: const TextStyle(fontSize: 16, color: darkTeal),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: darkTeal,
+                      ),
                     ),
                     Text(
                       r['price'].toString(),
-                      style: const TextStyle(fontSize: 16, color: darkTeal),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: darkTeal,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
 
-            const SizedBox(height: 10),
-            const Divider(height: 1, color: darkTeal),
-            const SizedBox(height: 10),
+            const SizedBox(height: 20),
 
-            // Total Poin
+            // ✅ TOTAL POIN
             Container(
               padding: const EdgeInsets.symmetric(vertical: 8.0),
               decoration: BoxDecoration(
-                color: lightLime,
+                color: lightLime, // ✅ WARNA ASLI TIDAK DIUBAH
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Padding(
@@ -565,7 +595,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
                       style: TextStyle(
                         fontSize: 18,
                         color: primaryBlue,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                     Text(
@@ -573,7 +603,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
                       style: const TextStyle(
                         fontSize: 18,
                         color: primaryBlue,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
