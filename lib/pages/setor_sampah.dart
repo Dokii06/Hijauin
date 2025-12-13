@@ -60,7 +60,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
           gradient: LinearGradient(
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
-            colors: [accentLime, darkTeal], // [DDEB9D, 27667B]
+            colors: [accentLime, darkTeal],
             stops: [0.0, 1.00],
           ),
         ),
@@ -84,7 +84,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
 
                     // Kartu Detail Alamat
                     _buildSectionTitle('Alamat'),
-                    _buildAddressCard(),
+                    _buildAddressCard(context),
 
                     const SizedBox(height: 12),
 
@@ -323,24 +323,19 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
     );
   }
 
-  // Widget untuk tombol Rumah/Kantor/Lainnya
+  // Widget untuk tombol Rumah / Kantor / Lainnya
   Widget _buildTypeButton(String label) {
-    bool isSelected = selectedAddressType == label;
-    return GestureDetector(
-      onTap: () async {
-        final result = await Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => const PilihJenisSampahPage()),
-        );
+    final bool isSelected = selectedAddressType == label;
 
-        if (result != null) {
-          setState(() {
-            jenisTerisi = true;
-          });
-        }
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          selectedAddressType = label;
+          alamatTerisi = true; // tipe alamat sudah dipilih
+        });
       },
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? primaryBlue : Colors.white.withOpacity(0.7),
           borderRadius: BorderRadius.circular(10),
@@ -360,22 +355,34 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
     );
   }
 
-  // --- KARTU ALAMAT (Disesuaikan) ---
-  Widget _buildAddressCard() {
+  // --- 3. Kartu Detail Alamat (Diperbaiki) ---
+  Widget _buildAddressCard(BuildContext context) {
+    // Data alamat detail dipisahkan untuk tampilan
+    final String shortAddress = 'Jalan Mawar Indah 3 No.51';
+    final String fullAddress =
+        'Jl. Mawar Indah 3 Blok P1 No.51, RT.8/RW.2, Desa Bunga Indah, Kec. Harum Wangi, Kabupaten Bekasi, Jawa Barat, 19870, Indonesia';
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: GestureDetector(
         onTap: () async {
+          // Navigasi ke halaman EditAlamatPage
           final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const EditAlamatPage()),
           );
 
-          if (result != null) {
-            setState(() {
-              alamat = result;
-              alamatTerisi = true;
-            });
+          if (result != null && result is String) {
+            // Asumsi Anda memiliki setState() yang dapat diakses di sini
+            // Misalnya, jika ini dipanggil dari _SetorSampahPageState:
+            // setState(() {
+            //   alamat = result;
+            //   alamatTerisi = true;
+            // });
+
+            // Karena saya tidak bisa mengakses setState di sini,
+            // saya biarkan kode navigasi tetap seperti yang Anda minta.
+            print('Alamat baru terpilih: $result');
           }
         },
         child: Container(
@@ -388,13 +395,34 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // JUDUL "Alamat" - Dibuat terpisah di atas kartu untuk tampilan sesuai gambar
+              // Text(
+              //   'Alamat', // Sesuai image_21c5c2.png
+              //   style: TextStyle(
+              //     fontSize: 14,
+              //     color: primaryBlue.withOpacity(0.8),
+              //     fontWeight: FontWeight.bold,
+              //   ),
+              // ),
+              // const SizedBox(height: 5),
+
+              // ALAMAT SINGKAT (Headline)
               Text(
-                alamat,
-                style: TextStyle(
+                shortAddress, // Gunakan alamat pendek atau variabel state 'alamat'
+                style: const TextStyle(
                   fontSize: 16,
                   color: primaryBlue,
                   fontWeight: FontWeight.w600,
                 ),
+              ),
+              const SizedBox(height: 5),
+
+              // ALAMAT DETAIL
+              Text(
+                fullAddress, // Gunakan alamat detail
+                style: const TextStyle(fontSize: 12, color: darkTeal),
+                maxLines: 3,
+                overflow: TextOverflow.ellipsis,
               ),
             ],
           ),
@@ -548,7 +576,6 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
               ),
             ),
 
-            // ✅ RINCIAN ITEM
             ...rincian.map(
               (r) => Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4.0),

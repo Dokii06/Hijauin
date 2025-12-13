@@ -29,14 +29,16 @@ class HijauinApp extends StatelessWidget {
 }
 
 class MainWrapper extends StatefulWidget {
-  const MainWrapper({super.key});
+  final int initialIndex;
+
+  const MainWrapper({super.key, this.initialIndex = 0});
 
   @override
   State<MainWrapper> createState() => _MainWrapperState();
 }
 
 class _MainWrapperState extends State<MainWrapper> {
-  int _selectedIndex = 0;
+  late int _selectedIndex;
 
   final List<Widget> _pages = const [Homepage(), SetorSampahPage(), AkunPage()];
 
@@ -44,6 +46,12 @@ class _MainWrapperState extends State<MainWrapper> {
     setState(() {
       _selectedIndex = index;
     });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialIndex;
   }
 
   @override
