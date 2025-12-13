@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hijauin/main.dart';
+import 'package:hijauin/pages/education_page.dart';
+import 'package:hijauin/pages/setor_sampah.dart';
+import 'chat_page.dart';
 import 'widget/new_carousel.dart';
 
 // Warna Identitas Hijauin (disinkronkan dari file-file sebelumnya)
@@ -31,7 +35,12 @@ class Homepage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ChatPage()),
+              );
+            },
             icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
           ),
           const SizedBox(width: 8),
@@ -78,7 +87,7 @@ class Homepage extends StatelessWidget {
                     const SizedBox(height: 20),
 
                     // Tips untuk Anda
-                    _buildTipsCard(),
+                    _buildTipsCard(context),
 
                     const SizedBox(height: 20),
                   ],
@@ -305,8 +314,12 @@ class Homepage extends StatelessWidget {
             width: 80,
             child: ElevatedButton(
               onPressed: () {
-                // Logika navigasi ke halaman setor
-                // Asumsi indeks Setor Sampah adalah 1 di MainWrapper, kita harus pop dulu ke MainWrapper jika perlu.
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MainWrapper(initialIndex: 1),
+                  ),
+                );
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: darkTeal,
@@ -320,6 +333,7 @@ class Homepage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.recycling, color: Colors.white, size: 24),
+                  SizedBox(height: 4),
                   Text(
                     'Setor',
                     style: TextStyle(color: Colors.white, fontSize: 14),
@@ -340,7 +354,7 @@ class Homepage extends StatelessWidget {
   }
 
   // --- 4. KARTU TIPS UNTUK ANDA ---
-  Widget _buildTipsCard() {
+  Widget _buildTipsCard(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
@@ -393,7 +407,14 @@ class Homepage extends StatelessWidget {
           SizedBox(
             height: 40,
             child: ElevatedButton(
-              onPressed: () {},
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EducationPage(),
+                  ),
+                );
+              },
               style: ElevatedButton.styleFrom(
                 backgroundColor: primaryBlue,
                 shape: RoundedRectangleBorder(
