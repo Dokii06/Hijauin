@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hijauin/auth/login_page.dart';
 import 'package:hijauin/services/auth_service.dart';
+import 'dart:async';
 
 // ===================== WARNA =====================
 const Color darkTeal = Color(0xFF27667B);
@@ -48,6 +50,21 @@ class _RegisterPageState extends State<RegisterPage> {
         return;
       }
 
+      if (!_agreedToTerms) {
+        _showError("Anda harus menyetujui syarat & ketentuan");
+        return;
+      }
+
+      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(emailController.text)) {
+        _showError("Format email tidak valid");
+        return;
+      }
+
+      if (passwordController.text.length < 6) {
+        _showError("Password minimal 6 karakter");
+        return;
+      }
+
       _pageController.nextPage(
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeIn,
@@ -72,11 +89,6 @@ class _RegisterPageState extends State<RegisterPage> {
 
   // ===================== REGISTER LOGIC =====================
   Future<void> _handleRegister() async {
-    if (!_agreedToTerms) {
-      _showError("Anda harus menyetujui syarat & ketentuan");
-      return;
-    }
-
     final result = await AuthService.register(
       name: nameController.text.trim(),
       email: emailController.text.trim(),
@@ -85,6 +97,11 @@ class _RegisterPageState extends State<RegisterPage> {
       alamat: addressController.text.trim(),
       noHp: phoneController.text.trim(),
     );
+
+    if (addressController.text.isEmpty || phoneController.text.isEmpty) {
+      _showError("Semua field wajib diisi");
+      return;
+    }
 
     if (result["success"]) {
       _showRegistrationSuccess();
@@ -102,7 +119,7 @@ class _RegisterPageState extends State<RegisterPage> {
   void _showRegistrationSuccess() {
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (_) => const RegistrationSuccessPage()),
+      MaterialPageRoute(builder: (_) => const SuccessRegistrationPage()),
     );
   }
 
@@ -181,8 +198,19 @@ class _RegisterPageState extends State<RegisterPage> {
           : isConfirmPassword
           ? _obscureConfirmPassword
           : false,
+      cursorColor: primaryBlue,
+      style: GoogleFonts.montserrat(),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: GoogleFonts.montserrat(
+          color: Colors.black.withOpacity(0.75),
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+        ),
+        floatingLabelStyle: GoogleFonts.montserrat(
+          color: Colors.black.withOpacity(0.75),
+          fontWeight: FontWeight.w600,
+        ),
         filled: true,
         fillColor: Colors.white,
         suffixIcon: (isPassword || isConfirmPassword)
@@ -203,7 +231,21 @@ class _RegisterPageState extends State<RegisterPage> {
                 },
               )
             : null,
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: primaryBlue.withOpacity(0.4),
+            width: 1.5,
+          ),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: primaryBlue, width: 2),
+        ),
       ),
     );
   }
@@ -219,12 +261,14 @@ class _RegisterPageState extends State<RegisterPage> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
           ),
+          elevation: 6,
         ),
         child: Text(
           text,
           style: GoogleFonts.montserrat(
             fontSize: 18,
             fontWeight: FontWeight.bold,
+            color: Colors.white,
           ),
         ),
       ),
@@ -233,9 +277,20 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget _buildProfileStep() {
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(horizontal: 32.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          const SizedBox(height: 10),
+          Text(
+            'Lengkapi profil sebelum melanjutkan\nuntuk daftar',
+            style: GoogleFonts.montserrat(
+              fontSize: 16,
+              color: primaryBlue,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+          const SizedBox(height: 30),
           _buildInputField(label: 'Nama lengkap', controller: nameController),
           const SizedBox(height: 20),
           _buildInputField(label: 'Email', controller: emailController),
@@ -251,12 +306,60 @@ class _RegisterPageState extends State<RegisterPage> {
             controller: confirmPasswordController,
             isConfirmPassword: true,
           ),
-          const SizedBox(height: 20),
-          CheckboxListTile(
-            value: _agreedToTerms,
-            onChanged: (v) => setState(() => _agreedToTerms = v!),
-            title: const Text("Saya menyetujui syarat & ketentuan"),
+          const SizedBox(height: 10),
+
+          // Checkbox Syarat & Ketentuan
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                height: 24,
+                width: 24,
+                child: Checkbox(
+                  value: _agreedToTerms,
+                  onChanged: (v) => setState(() => _agreedToTerms = v!),
+                  activeColor: primaryBlue,
+                  fillColor: MaterialStateProperty.resolveWith((states) {
+                    if (states.contains(MaterialState.selected)) {
+                      return primaryBlue;
+                    }
+                    return Colors.white;
+                  }),
+                  side: BorderSide(
+                    color: primaryBlue.withOpacity(0.7),
+                    width: 1.5,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text.rich(
+                    TextSpan(
+                      text: 'Saya telah membaca dan menyetujui ',
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        color: primaryBlue,
+                      ),
+                      children: const [
+                        TextSpan(
+                          text: 'Syarat dan Ketentuan',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            decoration: TextDecoration.underline,
+                          ),
+                        ),
+                        TextSpan(text: ' serta Kebijakan Privasi.'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
+
+          const SizedBox(height: 30),
           _buildMainButton("Lanjutkan"),
         ],
       ),
@@ -265,9 +368,38 @@ class _RegisterPageState extends State<RegisterPage> {
 
   Widget _buildLocationStep() {
     return Padding(
-      padding: const EdgeInsets.all(32),
+      padding: const EdgeInsets.symmetric(horizontal: 32.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
+          const SizedBox(height: 10),
+          Container(
+            height: 120,
+            width: 120,
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Icon(
+              Icons.public,
+              size: 80,
+              color: primaryBlue.withOpacity(0.8),
+            ),
+          ),
+          const SizedBox(height: 20),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Text(
+              'Daftarkan juga lokasimu agar mudah saat\nproses penjemputan sampah',
+              textAlign: TextAlign.center,
+              style: GoogleFonts.montserrat(
+                fontSize: 16,
+                color: primaryBlue,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          const SizedBox(height: 30),
           _buildInputField(
             label: 'Alamat lengkap',
             controller: addressController,
@@ -285,27 +417,135 @@ class _RegisterPageState extends State<RegisterPage> {
   }
 }
 
-// ===================== SUCCESS PAGE =====================
-class RegistrationSuccessPage extends StatelessWidget {
-  const RegistrationSuccessPage({super.key});
+class SuccessRegistrationPage extends StatefulWidget {
+  const SuccessRegistrationPage({super.key});
+
+  @override
+  State<SuccessRegistrationPage> createState() =>
+      _SuccessRegistrationPageState();
+}
+
+class _SuccessRegistrationPageState extends State<SuccessRegistrationPage> {
+  @override
+  void initState() {
+    super.initState();
+
+    Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.check_circle, size: 120, color: primaryBlue),
-            const SizedBox(height: 20),
-            const Text("Akun berhasil terdaftar"),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: () =>
-                  Navigator.popUntil(context, (route) => route.isFirst),
-              child: const Text("Masuk Sekarang"),
+      body: Container(
+        width: double.infinity,
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [Color(0xFFBFD98A), Color(0xFF27667B), Color(0xFFDDEB9D)],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.12),
+                        blurRadius: 12,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Image.asset(
+                    'assets/icons/success_icon.png',
+                    width: 90,
+                    height: 90,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.check_circle,
+                      size: 90,
+                      color: primaryBlue,
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 32),
+
+                // TITLE
+                const Text(
+                  'Akun Berhasil Dibuat!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w800,
+                    color: primaryBlue,
+                  ),
+                ),
+
+                const SizedBox(height: 12),
+
+                // DESCRIPTION
+                const Text(
+                  'Sekarang kamu dapat masuk\ndan mulai menggunakan aplikasi Hijauin.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(fontSize: 15, height: 1.5, color: darkTeal),
+                ),
+
+                const SizedBox(height: 36),
+
+                SizedBox(
+                  width: double.infinity,
+                  height: 50,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginPage()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryBlue,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 5,
+                    ),
+                    child: const Text(
+                      'Masuk Sekarang',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+
+                // LOGO
+                Image.asset(
+                  'assets/images/logo_horizontal.png',
+                  width: 120,
+                  fit: BoxFit.contain,
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );

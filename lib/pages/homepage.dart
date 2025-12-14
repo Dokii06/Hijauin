@@ -3,7 +3,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hijauin/main.dart';
 import 'package:hijauin/pages/education_page.dart';
-import 'package:hijauin/pages/setor_sampah.dart';
 import 'chat_page.dart';
 import 'widget/new_carousel.dart';
 
@@ -48,6 +47,7 @@ class _HomepageState extends State<Homepage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: primaryBlue,
         elevation: 0,
         title: const Text(
@@ -60,14 +60,15 @@ class _HomepageState extends State<Homepage> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
             onPressed: () {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const ChatPage()),
               );
             },
+            icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
           ),
+          const SizedBox(width: 8),
         ],
       ),
       body: Container(
@@ -76,27 +77,32 @@ class _HomepageState extends State<Homepage> {
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
             colors: [lightLime, darkTeal],
+            stops: [0.0, 1.0],
           ),
         ),
         child: SingleChildScrollView(
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               SizedBox(height: MediaQuery.of(context).padding.top),
               _buildCustomAppBar(),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     _buildRecycleSummaryCard(context),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     _buildSectionTitle("Berita terkini"),
                     const SizedBox(height: 10),
                     const NewsCarousel(),
                     const SizedBox(height: 20),
                     _buildTipsCard(context),
+                    const SizedBox(height: 20),
                   ],
                 ),
               ),
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -107,27 +113,58 @@ class _HomepageState extends State<Homepage> {
   // ===================== CUSTOM APP BAR =====================
   Widget _buildCustomAppBar() {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.only(
+        top: 30.0,
+        left: 16.0,
+        right: 16.0,
+        bottom: 16.0,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
               color: accentLime,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: const Text(
               'Halo, Selamat datang!',
-              style: TextStyle(fontWeight: FontWeight.bold, color: primaryBlue),
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                color: primaryBlue,
+              ),
             ),
           ),
-          const SizedBox(height: 6),
+
+          // PROFILE & POINTS ROW
           Container(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
               color: lightYellow,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(12),
+                bottomRight: Radius.circular(12),
+                topRight: Radius.circular(12),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black12.withOpacity(0.1),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -135,7 +172,7 @@ class _HomepageState extends State<Homepage> {
                 Row(
                   children: [
                     const CircleAvatar(
-                      radius: 26,
+                      radius: 28,
                       backgroundColor: primaryBlue,
                       child: Icon(Icons.person, color: Colors.white),
                     ),
@@ -147,12 +184,12 @@ class _HomepageState extends State<Homepage> {
                           userName,
                           style: const TextStyle(
                             fontSize: 16,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w800,
                           ),
                         ),
                         const Text(
                           "Yuk, lengkapi profil kamu!",
-                          style: TextStyle(fontSize: 12),
+                          style: TextStyle(color: darkTeal, fontSize: 12),
                         ),
                       ],
                     ),
@@ -162,9 +199,26 @@ class _HomepageState extends State<Homepage> {
                   children: [
                     const FaIcon(FontAwesomeIcons.coins, color: darkGreen),
                     const SizedBox(width: 6),
-                    Text(
-                      "$userPoints Poin",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "$userPoints",
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            color: primaryBlue,
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            const Text(
+                              'Poin',
+                              style: TextStyle(fontSize: 12, color: darkTeal),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -181,8 +235,21 @@ class _HomepageState extends State<Homepage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(colors: [accentLime, darkGreen]),
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          // Gradient ringan dari hijau terang ke hijau gelap
+          colors: [Color(0xFFDDEB9D), Color(0xFFA0C878)],
+          stops: [0.0, 1.0],
+        ),
         borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -192,28 +259,76 @@ class _HomepageState extends State<Homepage> {
             children: [
               const Text(
                 "Total Sampah Ter-Daur Ulang",
-                style: TextStyle(fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                "$totalWasteKg Kg",
-                style: const TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
+                style: TextStyle(
+                  fontSize: 18,
+                  color: primaryBlue,
+                  fontWeight: FontWeight.w800,
                 ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'Terimakasih melakukan daur ulang! Kami siap \nmenjemput sampah kamu.',
+                style: TextStyle(fontSize: 12, color: darkTeal),
+              ),
+              SizedBox(height: 10),
+              Stack(
+                children: [
+                  Text(
+                    "${totalWasteKg.toStringAsFixed(1)} kg",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      foreground: Paint()
+                        ..style = PaintingStyle.stroke
+                        ..strokeWidth = 2.5
+                        ..color = Color(0xFF505050),
+                    ),
+                  ),
+
+                  Text(
+                    "${totalWasteKg.toStringAsFixed(1)} kg",
+                    style: TextStyle(
+                      fontSize: 28,
+                      fontWeight: FontWeight.w800,
+                      color: lightYellow,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (_) => const MainWrapper(initialIndex: 1),
+          SizedBox(
+            height: 60,
+            width: 80,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const MainWrapper(initialIndex: 1),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: darkTeal,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-              );
-            },
-            child: const Text("Setor"),
+                padding: EdgeInsets.zero,
+                elevation: 4,
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.recycling, color: Colors.white, size: 24),
+                  SizedBox(height: 4),
+                  Text(
+                    'Setor',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
           ),
         ],
       ),
@@ -224,24 +339,67 @@ class _HomepageState extends State<Homepage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          // Gradient ringan dari hijau terang ke hijau gelap
+          colors: [Color(0xFFDDEB9D), Color(0xFFA0C878)],
+          stops: [0.0, 1.0],
+        ),
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
         children: [
           const Expanded(
-            child: Text(
-              "Sampah anorganik bisa merusak lingkungan. Yuk mulai daur ulang!",
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tips untuk Anda',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: primaryBlue,
+                  ),
+                ),
+                SizedBox(height: 8),
+                Text(
+                  'Sampah anorganik bisa merusak lingkungan. Yuk, pahami mengapa daur ulang adalah solusi terbaik!',
+                  style: TextStyle(fontSize: 14, color: darkTeal),
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-          ElevatedButton(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const EducationPage()),
-              );
-            },
-            child: const Text("Lihat"),
+          const SizedBox(width: 15),
+          SizedBox(
+            height: 40,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const EducationPage(),
+                  ),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: const Text('Lihat', style: TextStyle(color: Colors.white)),
+            ),
           ),
         ],
       ),
