@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hijauin/main.dart';
 import 'package:hijauin/pages/education_page.dart';
-import 'package:hijauin/pages/setor_sampah.dart';
 import 'chat_page.dart';
 import 'widget/new_carousel.dart';
 
-// Warna Identitas Hijauin (disinkronkan dari file-file sebelumnya)
+// Warna Identitas Hijauin
 const Color primaryBlue = Color(0xFF143D60);
 const Color darkTeal = Color(0xFF27667B);
 const Color lightLime = Color(0xFFBFD98A);
@@ -15,15 +15,40 @@ const Color accentLime = Color(0xFFDDEB9D);
 const Color darkGreen = Color(0xFFA0C878);
 const Color cardGreen = Color(0xFFC8E6C9);
 
-class Homepage extends StatelessWidget {
+class Homepage extends StatefulWidget {
   const Homepage({super.key});
+
+  @override
+  State<Homepage> createState() => _HomepageState();
+}
+
+class _HomepageState extends State<Homepage> {
+  String userName = "User"; // default sementara
+  int userPoints = 0; // dummy
+  double totalWasteKg = 0.0; // dummy
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  // AMBIL DATA USER DARI SHARED PREFERENCES
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString("user_name") ?? "User";
+      userPoints = 12000; // nanti dari API
+      totalWasteKg = 8.3; // nanti dari API
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ===================== APPBAR =====================
       appBar: AppBar(
-        backgroundColor: const Color(0xFF143D60),
+        automaticallyImplyLeading: false,
+        backgroundColor: primaryBlue,
         elevation: 0,
         title: const Text(
           "Hijauin",
@@ -38,7 +63,7 @@ class Homepage extends StatelessWidget {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ChatPage()),
+                MaterialPageRoute(builder: (_) => const ChatPage()),
               );
             },
             icon: const Icon(Icons.chat_bubble_outline, color: Colors.white),
@@ -46,14 +71,11 @@ class Homepage extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-
-      // Background Gradient untuk halaman (seperti di desain)
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            // Gradient ringan dari hijau terang ke hijau gelap
             colors: [lightLime, darkTeal],
             stops: [0.0, 1.0],
           ),
@@ -62,38 +84,25 @@ class Homepage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Ruang untuk status bar
               SizedBox(height: MediaQuery.of(context).padding.top),
-
-              // ========================= 1. CUSTOM APP BAR =========================
               _buildCustomAppBar(),
-
-              // ========================= 2. WIDGET UTAMA (MAIN CONTENT) =========================
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Kartu Ringkasan Sampah
                     _buildRecycleSummaryCard(context),
-
                     const SizedBox(height: 10),
-
-                    // Berita Terkini
-                    _buildSectionTitle(context, 'Berita terkini'),
+                    _buildSectionTitle("Berita terkini"),
                     const SizedBox(height: 10),
-                    _buildNewsCarousel(),
-
+                    const NewsCarousel(),
                     const SizedBox(height: 20),
-
-                    // Tips untuk Anda
                     _buildTipsCard(context),
-
                     const SizedBox(height: 20),
                   ],
                 ),
               ),
-              const SizedBox(height: 30), // Padding bawah
+              const SizedBox(height: 30),
             ],
           ),
         ),
@@ -101,12 +110,8 @@ class Homepage extends StatelessWidget {
     );
   }
 
-  //Custom AppBar
+  // ===================== CUSTOM APP BAR =====================
   Widget _buildCustomAppBar() {
-    // Dummy data sementara
-    String userName = "Sri Novellaputri Ramadhany";
-    int userPoints = 12000;
-
     return Padding(
       padding: const EdgeInsets.only(
         top: 30.0,
@@ -117,7 +122,6 @@ class Homepage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // ==================== Row 1: Halo, Selamat datang ====================
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             decoration: BoxDecoration(
@@ -139,12 +143,12 @@ class Homepage extends StatelessWidget {
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF143D60),
+                color: primaryBlue,
               ),
             ),
           ),
 
-          // ==================== Row 2: Username + Poin ====================
+          // PROFILE & POINTS ROW
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
             decoration: BoxDecoration(
@@ -165,20 +169,14 @@ class Homepage extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // --- Kiri: Foto, Nama, Pesan ---
                 Row(
                   children: [
-                    // Foto Profil
                     const CircleAvatar(
                       radius: 28,
                       backgroundColor: primaryBlue,
-                      backgroundImage: NetworkImage(
-                        'https://via.placeholder.com/150',
-                      ),
+                      child: Icon(Icons.person, color: Colors.white),
                     ),
                     const SizedBox(width: 10),
-
-                    // Nama & Pesan
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -187,24 +185,20 @@ class Homepage extends StatelessWidget {
                           style: const TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
-                            color: primaryBlue,
                           ),
                         ),
-                        const SizedBox(height: 2),
                         const Text(
-                          'Yuk, lengkapi profil kamu!',
+                          "Yuk, lengkapi profil kamu!",
                           style: TextStyle(color: darkTeal, fontSize: 12),
                         ),
                       ],
                     ),
                   ],
                 ),
-
-                // --- Kanan: Poin ---
                 Row(
                   children: [
-                    FaIcon(FontAwesomeIcons.coins, color: darkGreen, size: 28),
-                    const SizedBox(width: 15),
+                    const FaIcon(FontAwesomeIcons.coins, color: darkGreen),
+                    const SizedBox(width: 6),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -236,10 +230,10 @@ class Homepage extends StatelessWidget {
     );
   }
 
-  // --- 2. KARTU RINGKASAN DAUR ULANG ---
+  // ===================== RECYCLE SUMMARY =====================
   Widget _buildRecycleSummaryCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -263,15 +257,15 @@ class Homepage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'Total Sampah Ter-Daur Ulang',
+              const Text(
+                "Total Sampah Ter-Daur Ulang",
                 style: TextStyle(
                   fontSize: 18,
                   color: primaryBlue,
                   fontWeight: FontWeight.w800,
                 ),
               ),
-              SizedBox(height: 4),
+              const SizedBox(height: 4),
               Text(
                 'Terimakasih melakukan daur ulang! Kami siap \nmenjemput sampah kamu.',
                 style: TextStyle(fontSize: 12, color: darkTeal),
@@ -279,36 +273,30 @@ class Homepage extends StatelessWidget {
               SizedBox(height: 10),
               Stack(
                 children: [
-                  // 1. Teks untuk Outline (Stroke)
                   Text(
-                    '8.3 Kg',
+                    "${totalWasteKg.toStringAsFixed(1)} kg",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      // Menggunakan Paint untuk stroke
                       foreground: Paint()
                         ..style = PaintingStyle.stroke
-                        ..strokeWidth =
-                            2.5 // Ketebalan outline
-                        ..color = Color(0xFF505050), // Warna outline (Biru Tua)
+                        ..strokeWidth = 2.5
+                        ..color = Color(0xFF505050),
                     ),
                   ),
 
-                  // 2. Teks untuk Isi (Fill)
-                  const Text(
-                    '8.3 Kg',
+                  Text(
+                    "${totalWasteKg.toStringAsFixed(1)} kg",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.w800,
-                      color: lightYellow, // Warna isi (Kuning Muda)
+                      color: lightYellow,
                     ),
                   ),
                 ],
               ),
             ],
           ),
-
-          // Tombol Setor
           SizedBox(
             height: 60,
             width: 80,
@@ -347,27 +335,10 @@ class Homepage extends StatelessWidget {
     );
   }
 
-  // --- 3. BERITA TERKINI (CAROUSEL) ---
-  Widget _buildNewsCarousel() {
-    // Cukup panggil widget stateful yang sudah kita buat
-    return const NewsCarousel();
-  }
-
-  // --- 4. KARTU TIPS UNTUK ANDA ---
   Widget _buildTipsCard(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 4),
-          ),
-        ],
-        // Gradient di atas kartu tips (terlihat di desain)
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -375,10 +346,17 @@ class Homepage extends StatelessWidget {
           colors: [Color(0xFFDDEB9D), Color(0xFFA0C878)],
           stops: [0.0, 1.0],
         ),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.1),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
       ),
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           const Expanded(
             child: Column(
@@ -403,7 +381,6 @@ class Homepage extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 15),
-          // Tombol Lihat
           SizedBox(
             height: 40,
             child: ElevatedButton(
@@ -429,14 +406,16 @@ class Homepage extends StatelessWidget {
     );
   }
 
-  // --- Section Title Helper ---
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Text(
-      title,
-      style: const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w900,
-        color: Colors.white,
+  Widget _buildSectionTitle(String title) {
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Text(
+        title,
+        style: const TextStyle(
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
       ),
     );
   }

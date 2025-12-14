@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1037966979618",
+    "project_id": "hijauin-app",
+    "storage_bucket": "hijauin-app.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1037966979618:android:a3f8fe0a3f8ef016b1d07b",
+        "android_client_info": {
+          "package_name": "com.example.hijauin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCXWw3zasZO8QvVpCgnmAEIntdCaPkCuto"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

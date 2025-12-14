@@ -1,7 +1,7 @@
+import 'package:hijauin/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:hijauin/auth/register_page.dart';
 import 'package:hijauin/main.dart';
-import 'package:hijauin/pages/homePage.dart';
 import 'forgot_password.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -44,7 +44,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   // ===================== LOGIN LOGIC =====================
-  void handleLogin() {
+  void handleLogin() async {
     String email = emailController.text.trim();
     String pass = passwordController.text.trim();
 
@@ -53,18 +53,23 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    // ==================== DUMMY CHECK ====================
-    if (email == "admin@gmail.com" && pass == "123456") {
-      _showSuccess();
-      // Pindah halaman setelah 500ms (biarkan snackbar muncul dulu)
-      Future.delayed(const Duration(milliseconds: 500), () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (_) => const MainWrapper()),
-        );
-      });
-    } else {
-      _showError("Email atau password salah.");
+    try {
+      bool success = await AuthService.login(email, pass);
+
+      if (success) {
+        _showSuccess();
+
+        Future.delayed(const Duration(milliseconds: 500), () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (_) => const MainWrapper()),
+          );
+        });
+      } else {
+        _showError("Email atau password salah");
+      }
+    } catch (e) {
+      _showError("Gagal terhubung ke server");
     }
   }
 
@@ -322,23 +327,33 @@ class _LoginPageState extends State<LoginPage> {
         ? 'assets/icons/google.png'
         : 'assets/icons/facebook.png';
 
-    return Container(
-      width: 40,
-      height: 40,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        shape: BoxShape.circle,
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.18),
-            blurRadius: 6,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(10),
-        child: Image.asset(iconPath, fit: BoxFit.contain),
+    return GestureDetector(
+      onTap: () async {
+        if (type == "google") {
+          print("Login dengan Google");
+        } else {
+          print("Login dengan Facebook");
+          // TODO: login Facebook
+        }
+      },
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.18),
+              blurRadius: 6,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(10),
+          child: Image.asset(iconPath, fit: BoxFit.contain),
+        ),
       ),
     );
   }

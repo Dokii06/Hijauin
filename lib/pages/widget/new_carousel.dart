@@ -8,8 +8,8 @@ class NewsCarousel extends StatefulWidget {
 }
 
 class _NewsCarouselState extends State<NewsCarousel> {
-  int _currentPage = 0; // State untuk melacak halaman saat ini
-  final int _itemCount = 3; // Jumlah item dummy
+  int _currentPage = 0;
+  final int _itemCount = 3;
 
   // Warna dari konteks desain Anda
   final Color primaryBlue = const Color(0xFF143D60);
@@ -22,7 +22,7 @@ class _NewsCarouselState extends State<NewsCarousel> {
       children: [
         // 1. PageView Carousel
         SizedBox(
-          height: 364,
+          height: 284,
           child: PageView.builder(
             itemCount: _itemCount,
             onPageChanged: (index) {
@@ -54,16 +54,14 @@ class _NewsCarouselState extends State<NewsCarousel> {
   // Widget untuk setiap item carousel (kartu berita)
   Widget _buildCarouselItem(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(right: 15.0),
+      padding: const EdgeInsets.only(),
       child: Container(
         width: MediaQuery.of(context).size.width * 0.85,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),
           //
           image: const DecorationImage(
-            image: AssetImage(
-              'assets/images/lantern_festival.jpg',
-            ), // Placeholder Image
+            image: AssetImage('assets/images/lantern_festival.jpg'),
             fit: BoxFit.cover,
           ),
         ),
@@ -91,7 +89,7 @@ class _NewsCarouselState extends State<NewsCarousel> {
       duration: const Duration(milliseconds: 200),
       margin: const EdgeInsets.symmetric(horizontal: 4.0),
       height: 8.0,
-      width: _currentPage == index ? 24.0 : 8.0, // Titik aktif lebih panjang
+      width: _currentPage == index ? 24.0 : 8.0,
       decoration: BoxDecoration(
         color: _currentPage == index ? primaryBlue : Colors.white70,
         borderRadius: BorderRadius.circular(4),
