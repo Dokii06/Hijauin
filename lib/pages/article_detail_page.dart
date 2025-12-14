@@ -1,27 +1,73 @@
 import 'package:flutter/material.dart';
 import 'package:hijauin/pages/chat_page.dart';
 
+import 'dart:convert';
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
 // Asumsi Warna (didefinisikan di global scope atau file utama)
 const Color primaryBlue = Color(0xFF143D60);
 const Color darkTeal = Color(0xFF27667B);
 const Color lightLime = Color(0xFFBFD98A);
 const Color accentLime = Color(0xFFDDEB9D);
-const Color headerAccentBlue = Color(0xFF297EC6); // Aksen Biru di Header
+const Color headerAccentBlue = Color(0xFF297EC6);
 
-class ArticleDetailPage extends StatelessWidget {
-  final String articleTitle;
-  final String date;
-  final String author;
+class ArticleDetailPage extends StatefulWidget {
+  final int articleId;
 
-  const ArticleDetailPage({
-    super.key,
-    required this.articleTitle,
-    required this.date,
-    required this.author,
-  });
+  const ArticleDetailPage({super.key, required this.articleId});
+
+  @override
+  State<ArticleDetailPage> createState() => _ArticleDetailPageState();
+}
+
+class _ArticleDetailPageState extends State<ArticleDetailPage> {
+  bool isLoading = true;
+
+  String title = '';
+  String content = '';
+  String date = '';
+  String author = '';
+
+  final String apiBase = 'http://127.0.0.1:8000/api/articles';
+
+  @override
+  void initState() {
+    super.initState();
+    fetchArticleDetail();
+  }
+
+  Future<void> fetchArticleDetail() async {
+    try {
+      final response = await http.get(
+        Uri.parse('$apiBase/${widget.articleId}'),
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body)['data'];
+
+        setState(() {
+          title = data['judul'];
+          content = data['konten'];
+          date = data['tanggal'];
+          author = data['penulis'];
+          isLoading = false;
+        });
+      } else {
+        print('Gagal load detail');
+        isLoading = false;
+      }
+    } catch (e) {
+      print('Error: $e');
+      isLoading = false;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
+    if (isLoading) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
     return Scaffold(
       body: CustomScrollView(
         slivers: [
@@ -53,7 +99,7 @@ class ArticleDetailPage extends StatelessWidget {
               centerTitle: true,
               titlePadding: const EdgeInsets.only(left: 16, bottom: 15),
               title: Text(
-                articleTitle,
+                title,
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -63,7 +109,6 @@ class ArticleDetailPage extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               background: Container(
-                // Ini adalah dekorasi gradient yang menciptakan tampilan Header Blue-Greenish
                 decoration: const BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -75,10 +120,8 @@ class ArticleDetailPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.start,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Gambar Artikel Placeholder
                     Container(
                       height: 150,
-                      // Warna latar belakang Gambar
                       color: darkTeal.withOpacity(0.6),
                       margin: const EdgeInsets.only(
                         top: 50,
@@ -93,11 +136,9 @@ class ArticleDetailPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 10),
-                    // Info Tanggal/Penulis
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Text(
-                        // Data di gambar: 'Diunggah pada 15 Maret 2023 Penulis : Zaldy Seno'
                         'Diunggah pada $date | Penulis: $author',
                         style: const TextStyle(
                           color: Colors.white70,
@@ -125,7 +166,7 @@ class ArticleDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      articleTitle,
+                      title,
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
@@ -133,31 +174,9 @@ class ArticleDetailPage extends StatelessWidget {
                       ),
                     ),
                     const Divider(height: 30),
-                    _buildArticleSection(
-                      '1. Mengurangi Timbunan Sampah di TPA',
-                      'Setiap hari, ribuan ton sampah dikirim ke Tempat Pembuangan Akhir (TPA). Tanpa pengelolaan yang baik, sampah ini bisa mencemari tanah dan air. Dengan mendaur ulang, kita mengurangi jumlah sampah yang harus dibuang dan memperpanjang umur TPA.',
-                    ),
-                    _buildArticleSection(
-                      '2. Menghemat Sumber Daya Alam',
-                      'Banyak bahan yang digunakan dalam produk sehari-hari berasal dari sumber daya alam yang terbatas seperti kayu, minyak bumi, dan logam. Dengan mendaur ulang kertas, plastik, dan logam, kita bisa mengurangi eksploitasi sumber daya alam.',
-                    ),
-                    _buildArticleSection(
-                      '3. Mengurangi Polusi dan Emisi Karbon',
-                      'Proses produksi barang baru membutuhkan energi besar dan menghasilkan emisi karbon yang mempercepat perubahan iklim. Daur ulang membutuhkan energi kecil daripada produksi baru dan menghemat energi. Contohnya, mendaur ulang aluminium bisa menghemat hingga 95% energi dibandingkan membuat aluminium dari bahan mentah!',
-                    ),
-                    _buildArticleSection(
-                      '4. Melindungi Ekosistem dan Kehidupan Laut',
-                      'Sampah plastik yang tidak terkelola sering berakhir di lautan dan mengancam kehidupan laut. Hewan, seperti penyu, lumba-lumba, dan burung sering memakan plastik karena mengira itu makanan. Dengan mendaur ulang plastik, kita bisa mencegah lebih banyak sampah masuk ke ekosistem laut.',
-                    ),
-                    _buildArticleSection(
-                      '5. Menciptakan Peluang Ekonomi',
-                      'Daur ulang membuka banyak lapangan pekerjaan, mulai dari pengumpulan, pengolahan, hingga pembuatan produk daur ulang. Ini membantu perekonomian lokal sekaligus menjaga lingkungan.',
-                    ),
-                    const SizedBox(height: 20),
-                    _buildConclusionBox(),
+                    _buildArticleSection(content),
                     const SizedBox(height: 30),
 
-                    // Tombol Suka/Komentar (sesuai gambar)
                     Row(
                       children: [
                         const Icon(
@@ -198,55 +217,17 @@ class ArticleDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildArticleSection(String title, String content) {
+  Widget _buildArticleSection(String content) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 15.0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: darkTeal,
-            ),
-          ),
-          const SizedBox(height: 5),
-          Text(
             content,
             style: const TextStyle(fontSize: 14, color: Colors.black87),
             textAlign: TextAlign.justify,
           ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildConclusionBox() {
-    return Container(
-      padding: const EdgeInsets.all(15),
-      decoration: BoxDecoration(
-        color: lightLime.withOpacity(0.5),
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: darkTeal.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Bagaimana Kita Bisa Mulai?',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: darkTeal,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _buildChecklistItem('Pilahlah sampah dari rumah'),
-          _buildChecklistItem('Gunakan kembali barang yang masih bisa dipakai'),
-          _buildChecklistItem('Jual atau donasikan barang bekas'),
-          _buildChecklistItem('Kurangi penggunaan plastik sekali pakai'),
         ],
       ),
     );

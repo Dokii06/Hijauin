@@ -108,7 +108,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
                     // --- 5. TOMBOL CARI KURIR ---
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Container(
+                      child: SizedBox(
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
