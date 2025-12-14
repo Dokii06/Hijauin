@@ -342,7 +342,6 @@ class _HomepageState extends State<Homepage> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          // Gradient ringan dari hijau terang ke hijau gelap
           colors: [Color(0xFFDDEB9D), Color(0xFFA0C878)],
           stops: [0.0, 1.0],
         ),
