@@ -5,6 +5,8 @@ import 'package:hijauin/main.dart';
 import 'package:hijauin/pages/education_page.dart';
 import 'chat_page.dart';
 import 'widget/new_carousel.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 // Warna Identitas Hijauin
 const Color primaryBlue = Color(0xFF143D60);
@@ -36,11 +38,24 @@ class _HomepageState extends State<Homepage> {
   // AMBIL DATA USER DARI SHARED PREFERENCES
   Future<void> _loadUserData() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      userName = prefs.getString("user_name") ?? "User";
-      userPoints = 12000; // nanti dari API
-      totalWasteKg = 8.3; // nanti dari API
-    });
+    final token = prefs.getString('token');
+
+    if (token == null) return;
+
+    final res = await http.get(
+      Uri.parse('http://127.0.0.1:8000/api/dashboard'),
+      headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
+    );
+
+    if (res.statusCode == 200) {
+      final data = jsonDecode(res.body);
+
+      setState(() {
+        userName = data['user']['name'];
+        totalWasteKg = (data['total_waste_kg'] ?? 0).toDouble();
+        userPoints = data['points'] ?? 0;
+      });
+    }
   }
 
   @override
