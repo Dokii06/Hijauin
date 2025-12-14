@@ -6,6 +6,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'pages/homepage.dart';
 import 'pages/setor_sampah.dart';
 import 'pages/akun.dart';
+import 'auth/login_page.dart';
 
 // Import Splash Screen
 import 'splash_screen.dart';
@@ -23,11 +24,21 @@ class HijauinApp extends StatelessWidget {
       title: 'Hijauin',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(textTheme: GoogleFonts.interTextTheme()),
-      home: const SplashScreen(),
+
+      // ⬇️ ROUTE AWAL
+      initialRoute: '/',
+
+      // ⬇️ DAFTAR ROUTE
+      routes: {
+        '/': (context) => const SplashScreen(),
+        '/login': (context) => const LoginPage(),
+        '/home': (context) => const MainWrapper(),
+      },
     );
   }
 }
 
+// ======================== MAIN WRAPPER ========================
 class MainWrapper extends StatefulWidget {
   final int initialIndex;
 
@@ -57,10 +68,8 @@ class _MainWrapperState extends State<MainWrapper> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // ===================== BODY =====================
       body: _pages[_selectedIndex],
 
-      // ===================== NAVBAR =====================
       bottomNavigationBar: Container(
         padding: const EdgeInsets.symmetric(vertical: 8),
         decoration: const BoxDecoration(color: Color(0xFF143D60)),
