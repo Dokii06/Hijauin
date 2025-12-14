@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'edit_profile.dart';
 
 // ===================== WARNA =====================
 const Color primaryBlue = Color(0xFF143D60);
@@ -69,95 +70,119 @@ class _AkunPageState extends State<AkunPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: backgroundLight,
-      body: CustomScrollView(
-        slivers: [
-          // ===================== APP BAR =====================
-          SliverAppBar(
-            expandedHeight: 180,
-            pinned: true,
-            backgroundColor: lightLime,
-            elevation: 0,
-            flexibleSpace: FlexibleSpaceBar(
-              titlePadding: const EdgeInsets.only(left: 60, bottom: 8),
-              title: const Text(
-                'Akun Saya',
-                style: TextStyle(
-                  color: primaryBlue,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
-              ),
-              background: Padding(
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top + 50,
-                  left: 16,
-                  right: 16,
-                ),
-                child: _buildProfileInfo(),
-              ),
-            ),
-          ),
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            _buildProfileHeader(),
+            _buildPointCard(),
+            _buildOrderHistorySection(),
 
-          // ===================== BODY =====================
-          SliverList(
-            delegate: SliverChildListDelegate([
-              _buildPointCard(),
-              _buildOrderHistorySection(),
-
-              _buildSettingsGroup('Pengaturan Akun', [
-                _buildMenuItem(Icons.menu, 'Aktivitas'),
-                _buildMenuItem(Icons.local_offer, 'Promo'),
-                _buildMenuItem(Icons.credit_card, 'Metode Pembayaran'),
-              ]),
-
-              _buildSettingsGroup('Keamanan Akun', [
-                _buildMenuItem(Icons.help_outline, 'Pusat Bantuan'),
-                _buildMenuItem(
-                  Icons.verified_user_outlined,
-                  'Kebijakan Privasi',
-                ),
-              ]),
-
-              const SizedBox(height: 30),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                child: _buildLogoutButton(),
-              ),
-              const SizedBox(height: 50),
+            _buildSettingsGroup('Pengaturan Akun', [
+              _buildMenuItem(Icons.menu, 'Aktivitas'),
+              _buildMenuItem(Icons.local_offer, 'Promo'),
+              _buildMenuItem(Icons.credit_card, 'Metode Pembayaran'),
             ]),
-          ),
-        ],
+
+            _buildSettingsGroup('Keamanan Akun', [
+              _buildMenuItem(Icons.help_outline, 'Pusat Bantuan'),
+              _buildMenuItem(Icons.verified_user_outlined, 'Kebijakan Privasi'),
+            ]),
+
+            const SizedBox(height: 30),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _buildLogoutButton(),
+            ),
+            const SizedBox(height: 50),
+          ],
+        ),
       ),
     );
   }
 
   // ===================== PROFIL =====================
-  Widget _buildProfileInfo() {
-    return Row(
-      children: [
-        const CircleAvatar(
-          radius: 35,
-          backgroundColor: primaryBlue,
-          child: Icon(Icons.person, color: Colors.white, size: 40),
+  Widget _buildProfileHeader() {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 50, 16, 24),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
         ),
-        const SizedBox(width: 15),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              name,
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: primaryBlue,
-              ),
+        borderRadius: BorderRadius.only(
+          bottomLeft: Radius.circular(24),
+          bottomRight: Radius.circular(24),
+        ),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // FOTO PROFIL DEFAULT (ICON)
+          const CircleAvatar(
+            radius: 32,
+            backgroundColor: Colors.white,
+            child: Icon(Icons.person, size: 36, color: Colors.grey),
+          ),
+
+          const SizedBox(width: 16),
+
+          // INFO USER
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+
+                    // TOMBOL EDIT
+                    IconButton(
+                      icon: const Icon(Icons.edit, color: Colors.white),
+                      onPressed: () async {
+                        final updated = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const EditProfilePage(),
+                          ),
+                        );
+
+                        if (updated == true) {
+                          _loadUserData(); // refresh akun
+                        }
+                      },
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 4),
+                Text(email, style: const TextStyle(color: Colors.white70)),
+
+                const SizedBox(height: 2),
+                Text(noHp, style: const TextStyle(color: Colors.white70)),
+
+                const SizedBox(height: 2),
+                Text(
+                  alamat,
+                  style: const TextStyle(color: Colors.white70),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
-            Text(email, style: const TextStyle(color: darkTeal)),
-            Text(noHp, style: const TextStyle(color: darkTeal)),
-            Text(alamat, style: const TextStyle(color: darkTeal)),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
