@@ -1,9 +1,10 @@
 import 'dart:convert';
+import 'package:hijauin/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  static const String baseUrl = "http://127.0.0.1:8000/api";
+  static const String baseUrl = "${ApiConfig.baseUrl}";
 
   static Future<Map<String, dynamic>> register({
     required String name,
@@ -61,6 +62,7 @@ class AuthService {
 
       // Simpan token
       final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('user_id', data['user']['id']);
       await prefs.setString("token", data["token"]);
       await prefs.setString("user_name", data["user"]["name"]);
       await prefs.setString("user_email", data["user"]["email"]);
@@ -69,6 +71,11 @@ class AuthService {
     } else {
       return false;
     }
+  }
+
+  static Future<void> simpanUserId(int id) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setInt('user_id', id);
   }
 
   static Future<void> logout() async {

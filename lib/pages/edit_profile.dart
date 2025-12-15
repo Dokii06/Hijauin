@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hijauin/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -37,7 +38,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (token == null) return;
 
     final res = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/me'),
+      Uri.parse('${ApiConfig.baseUrl}/me'),
       headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
     );
 
@@ -61,7 +62,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final token = prefs.getString('token');
 
     final res = await http.put(
-      Uri.parse('http://127.0.0.1:8000/api/profile'),
+      Uri.parse('${ApiConfig.baseUrl}/profile'),
       headers: {
         'Accept': 'application/json',
         'Authorization': 'Bearer $token',

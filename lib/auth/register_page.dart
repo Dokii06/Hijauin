@@ -319,8 +319,8 @@ class _RegisterPageState extends State<RegisterPage> {
                   value: _agreedToTerms,
                   onChanged: (v) => setState(() => _agreedToTerms = v!),
                   activeColor: primaryBlue,
-                  fillColor: MaterialStateProperty.resolveWith((states) {
-                    if (states.contains(MaterialState.selected)) {
+                  fillColor: WidgetStateProperty.resolveWith((states) {
+                    if (states.contains(WidgetState.selected)) {
                       return primaryBlue;
                     }
                     return Colors.white;

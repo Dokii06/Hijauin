@@ -1,15 +1,22 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:hijauin/config/api_config.dart';
+import 'package:hijauin/services/sampah_service.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 import 'edit_alamat.dart';
 import 'jenis_sampah.dart';
 
-// Warna Identitas Hijauin (disinkronkan)
-const Color primaryBlue = Color(0xFF143D60); // Biru Tua
-const Color darkTeal = Color(0xFF27667B); // Teal Gelap
-const Color lightLime = Color(0xFFBFD98A); // Hijau Kekuningan
-const Color accentLime = Color(0xFFDDEB9D); // Hijau Muda Terang
-const Color backgroundLight = Color(0xFFF7F7F7); // Warna latar belakang kartu
-const Color lightGreenCard = Color(0xFFF2F9D4); // Warna latar belakang kartu
+const Color primaryBlue = Color(0xFF143D60);
+const Color darkTeal = Color(0xFF27667B);
+const Color lightLime = Color(0xFFBFD98A);
+const Color accentLime = Color(0xFFDDEB9D);
+const Color backgroundLight = Color(0xFFF7F7F7);
+const Color lightGreenCard = Color(0xFFF2F9D4);
 const Color headerAccentBlue = Color(0xFF297EC6);
+
+const int POIN_PER_KG = 8;
 
 class SetorSampahPage extends StatefulWidget {
   const SetorSampahPage({super.key});
@@ -19,34 +26,112 @@ class SetorSampahPage extends StatefulWidget {
 }
 
 class _SetorSampahPageState extends State<SetorSampahPage> {
-  // State Placeholder
-  String selectedAddressType = 'Rumah';
-  String alamat = 'Jl. Merpati No. 45, Jakarta';
+  String? alamatUser;
   bool alamatTerisi = false;
+  bool isLoadingAlamat = true;
+
+  Map<String, dynamic>? sampahTerpilih;
+  List<dynamic> sampahList = [];
+  bool isLoadingSampah = true;
   bool jenisTerisi = false;
+  int? selectedSampahId;
+
+  late TextEditingController beratController;
+  double beratKg = 0;
   bool beratTerisi = false;
-  // Data dummy untuk Detail Item
-  final List<Map<String, dynamic>> trashItems = [
-    {
-      'icon': Icons.delete_outline,
-      'name': 'Botol Plastik',
-      'weight': '2.000',
-      'unit': 'Kg',
-      'price': 20000,
-    },
-    {
-      'icon': Icons.chair_alt,
-      'name': 'Aluminium',
-      'weight': '4.000',
-      'unit': 'Kg',
-      'price': 12000,
-    },
-  ];
-  final List<Map<String, dynamic>> trashSizes = [
-    {'icon': Icons.inventory_2_outlined, 'name': '10.00 Kg', 'value': 10.00},
-    {'icon': Icons.inventory_2_outlined, 'name': '3.00 Kg', 'value': 3.00},
-  ];
-  final totalPoin = 32000;
+
+  int hitungTotalPoin() {
+    if (sampahTerpilih == null || beratKg <= 0) return 0;
+
+    return (beratKg * POIN_PER_KG).round();
+  }
+
+  int hitungTotalHarga() {
+    if (sampahTerpilih == null || beratKg <= 0) return 0;
+
+    final hargaPerKg = sampahTerpilih!['harga_per_kg'] as int;
+    return (beratKg * hargaPerKg).round();
+  }
+
+  bool get isFormValid {
+    return alamatTerisi &&
+        jenisTerisi &&
+        beratKg > 0 &&
+        alamatUser != null &&
+        sampahTerpilih != null;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    loadAlamat();
+    loadSampah();
+    beratController = TextEditingController(text: beratKg.toStringAsFixed(1));
+  }
+
+  @override
+  void dispose() {
+    beratController.dispose();
+    super.dispose();
+  }
+
+  Future<int?> getUserId() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getInt('user_id');
+  }
+
+  Future<void> loadAlamat() async {
+    setState(() {
+      isLoadingAlamat = true;
+    });
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) {
+      setState(() {
+        alamatUser = null;
+        alamatTerisi = false;
+        isLoadingAlamat = false;
+      });
+      return;
+    }
+
+    final response = await http.get(
+      Uri.parse('${ApiConfig.baseUrl}/me'),
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final user = data['user'];
+
+      setState(() {
+        alamatUser = user['alamat'];
+        alamatTerisi = alamatUser != null && alamatUser!.toString().isNotEmpty;
+        isLoadingAlamat = false;
+      });
+    } else {
+      setState(() {
+        alamatUser = null;
+        alamatTerisi = false;
+        isLoadingAlamat = false;
+      });
+    }
+  }
+
+  Future<void> loadSampah() async {
+    try {
+      final data = await ApiService.getSampah();
+      setState(() {
+        sampahList = data;
+        isLoadingSampah = false;
+      });
+    } catch (e) {
+      isLoadingSampah = false;
+      debugPrint(e.toString());
+    }
+  }
 
   // Konstanta untuk tinggi Header
   static const double headerHeight = 150.0;
@@ -66,43 +151,33 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
         ),
         child: Stack(
           children: [
-            // 1. Header Biru Tua (fixed di atas)
             _buildBlueHeader(context),
 
-            // 2. Scrollable Content (Dimulai di bawah header)
             Padding(
-              // Mulai di bawah HeaderHeight - agar kartu lokasi bisa 'tenggelam' sedikit
-              padding: const EdgeInsets.only(top: headerHeight - 30),
+              padding: const EdgeInsets.only(top: headerHeight),
               child: SingleChildScrollView(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Kartu Lokasi Map (Diberi margin negatif di dalam fungsi ini untuk efek tenggelam)
                     _buildMapLocationCard(context),
 
-                    const SizedBox(height: 10),
-
-                    // Kartu Detail Alamat
-                    _buildSectionTitle('Alamat'),
+                    const SizedBox(height: 15),
                     _buildAddressCard(context),
 
                     const SizedBox(height: 12),
-
-                    // --- 2. JENIS SAMPAH ---
                     _buildSectionTitle('Jenis Sampah'),
-                    _buildTypeSection(items: trashItems, isType: true),
-
+                    isLoadingSampah
+                        ? const Center(child: CircularProgressIndicator())
+                        : _buildPilihJenisSampah(context),
                     const SizedBox(height: 12),
 
                     // --- 3. UKURAN SAMPAH ---
                     _buildSectionTitle('Ukuran Sampah'),
-                    _buildTypeSection(items: trashSizes, isType: false),
-
+                    _buildInputBerat(),
                     const SizedBox(height: 12),
 
                     // --- 4. DETAIL SETORAN ---
-                    _buildDetailSummary(trashItems, trashSizes, totalPoin),
-
+                    _buildDetailSummary(),
                     const SizedBox(height: 20),
 
                     // --- 5. TOMBOL CARI KURIR ---
@@ -112,14 +187,33 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed:
-                              (alamatTerisi && jenisTerisi && beratTerisi)
-                              ? () {
-                                  print("Cari Kurir Aktif!");
+                          onPressed: isFormValid
+                              ? () async {
+                                  final userId = await getUserId();
+
+                                  if (userId == null) return;
+
+                                  await ApiService.kirimSetoran(
+                                    userId: userId,
+                                    sampahId: sampahTerpilih!['id'],
+                                    beratKg: beratKg,
+                                    alamat: alamatUser!,
+                                    totalPoin: hitungTotalPoin(),
+                                    totalHarga: hitungTotalHarga(),
+                                  );
+
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Setoran berhasil dikirim'),
+                                    ),
+                                  );
                                 }
                               : null,
                           style: ElevatedButton.styleFrom(
                             backgroundColor: primaryBlue,
+                            disabledBackgroundColor: primaryBlue.withOpacity(
+                              0.4,
+                            ),
                             elevation: 6,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -137,7 +231,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 140),
+                    const SizedBox(height: 160),
                   ],
                 ),
               ),
@@ -148,12 +242,11 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
     );
   }
 
-  // --- 1. Header Biru Tua (Diperbaiki) ---
   Widget _buildBlueHeader(BuildContext context) {
     return Container(
       height: headerHeight,
       padding: EdgeInsets.only(
-        top: MediaQuery.of(context).padding.top, // Mulai dari bawah status bar
+        top: MediaQuery.of(context).padding.top,
         bottom: 20,
         left: 16,
         right: 16,
@@ -163,8 +256,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          // Menggunakan warna biru gelap dan aksen biru seperti di gambar
-          colors: [primaryBlue, headerAccentBlue], // [143D60, 297EC6]
+          colors: [primaryBlue, headerAccentBlue],
           stops: [0.00, 0.88],
         ),
         borderRadius: BorderRadius.only(
@@ -177,7 +269,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
         children: [
           const SizedBox(height: 50),
           const Text(
-            'Mau jemput di mana, Sri?',
+            'Mau jemput di mana,',
             style: TextStyle(
               color: Colors.white,
               fontSize: 22,
@@ -304,52 +396,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
                 ],
               ),
             ),
-
-            const SizedBox(height: 10),
-            // Type Selection
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                _buildTypeButton('Rumah'),
-                const SizedBox(width: 8),
-                _buildTypeButton('Kantor'),
-                const SizedBox(width: 8),
-                _buildTypeButton('Lainnya'),
-              ],
-            ),
           ],
-        ),
-      ),
-    );
-  }
-
-  // Widget untuk tombol Rumah / Kantor / Lainnya
-  Widget _buildTypeButton(String label) {
-    final bool isSelected = selectedAddressType == label;
-
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          selectedAddressType = label;
-          alamatTerisi = true; // tipe alamat sudah dipilih
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: isSelected ? primaryBlue : Colors.white.withOpacity(0.7),
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(
-            color: isSelected ? primaryBlue : darkTeal.withOpacity(0.5),
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: isSelected ? Colors.white : darkTeal,
-            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-            fontSize: 14,
-          ),
         ),
       ),
     );
@@ -357,11 +404,6 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
 
   // --- 3. Kartu Detail Alamat (Diperbaiki) ---
   Widget _buildAddressCard(BuildContext context) {
-    // Data alamat detail dipisahkan untuk tampilan
-    final String shortAddress = 'Jalan Mawar Indah 3 No.51';
-    final String fullAddress =
-        'Jl. Mawar Indah 3 Blok P1 No.51, RT.8/RW.2, Desa Bunga Indah, Kec. Harum Wangi, Kabupaten Bekasi, Jawa Barat, 19870, Indonesia';
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: GestureDetector(
@@ -373,19 +415,15 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
           );
 
           if (result != null && result is String) {
-            // Asumsi Anda memiliki setState() yang dapat diakses di sini
-            // Misalnya, jika ini dipanggil dari _SetorSampahPageState:
-            // setState(() {
-            //   alamat = result;
-            //   alamatTerisi = true;
-            // });
-
-            // Karena saya tidak bisa mengakses setState di sini,
-            // saya biarkan kode navigasi tetap seperti yang Anda minta.
-            print('Alamat baru terpilih: $result');
+            setState(() {
+              alamatUser = result;
+              alamatTerisi = result.isNotEmpty;
+            });
           }
         },
         child: Container(
+          width: double.infinity,
+          constraints: const BoxConstraints(minHeight: 90),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: lightGreenCard,
@@ -395,20 +433,8 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // JUDUL "Alamat" - Dibuat terpisah di atas kartu untuk tampilan sesuai gambar
-              // Text(
-              //   'Alamat', // Sesuai image_21c5c2.png
-              //   style: TextStyle(
-              //     fontSize: 14,
-              //     color: primaryBlue.withOpacity(0.8),
-              //     fontWeight: FontWeight.bold,
-              //   ),
-              // ),
-              // const SizedBox(height: 5),
-
-              // ALAMAT SINGKAT (Headline)
               Text(
-                shortAddress, // Gunakan alamat pendek atau variabel state 'alamat'
+                'Alamat Penjemputan',
                 style: const TextStyle(
                   fontSize: 16,
                   color: primaryBlue,
@@ -416,11 +442,13 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
                 ),
               ),
               const SizedBox(height: 5),
-
-              // ALAMAT DETAIL
               Text(
-                fullAddress, // Gunakan alamat detail
-                style: const TextStyle(fontSize: 12, color: darkTeal),
+                isLoadingAlamat
+                    ? 'Memuat alamat...'
+                    : (alamatTerisi
+                          ? alamatUser!
+                          : 'Belum ada alamat. Ketuk untuk menambahkan.'),
+                style: const TextStyle(fontSize: 14, color: darkTeal),
                 maxLines: 3,
                 overflow: TextOverflow.ellipsis,
               ),
@@ -431,129 +459,119 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
     );
   }
 
-  // --- JENIS SAMPAH & UKURAN SAMPAH SECTION ---
-  Widget _buildTypeSection({
-    required List<Map<String, dynamic>> items,
-    required bool isType, // true untuk Jenis Sampah, false untuk Ukuran
-  }) {
+  Widget _buildPilihJenisSampah(BuildContext context) {
+    final bool sudahPilih = sampahTerpilih != null;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: lightGreenCard, // Warna yang sama dengan kartu alamat
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: darkTeal.withOpacity(0.3)),
-        ),
-        child: Column(
-          children: items.map((item) {
-            return _buildTypeItem(item, isType);
-          }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTypeItem(Map<String, dynamic> item, bool isType) {
-    final icon = item['icon'] as IconData;
-    final name = isType ? item['name'] : item['name'];
-    final valueText = isType
-        ? '${item['weight']}/${item['unit']}'
-        : item['name'];
-
-    // Warna dan gaya teks berbeda jika ini adalah bagian Jenis Sampah vs Ukuran
-    final nameStyle = isType
-        ? const TextStyle(fontSize: 16, color: primaryBlue)
-        : const TextStyle(
-            fontSize: 16,
-            color: darkTeal,
-            fontWeight: FontWeight.w600,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: GestureDetector(
+        onTap: () async {
+          final result = await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const JenisSampahPage()),
           );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: primaryBlue, size: 24),
-              const SizedBox(width: 10),
-              Text(name, style: nameStyle),
-            ],
+          if (result != null && result is Map<String, dynamic>) {
+            setState(() {
+              sampahTerpilih = result;
+              jenisTerisi = true;
+            });
+          }
+        },
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          width: double.infinity,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: lightGreenCard,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: sudahPilih ? primaryBlue : darkTeal.withOpacity(0.3),
+              width: sudahPilih ? 1.4 : 1,
+            ),
           ),
-          // Tombol/Indikator Kanan
-          isType
-              ? Row(
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: sudahPilih ? primaryBlue : accentLime,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.delete_outline,
+                  color: sudahPilih ? Colors.white : darkTeal,
+                  size: 26,
+                ),
+              ),
+
+              const SizedBox(width: 12),
+
+              // TEXT
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      valueText,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        color: darkTeal,
-                        fontWeight: FontWeight.w600,
+                      sudahPilih
+                          ? sampahTerpilih!['nama']
+                          : 'Pilih jenis sampah',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: sudahPilih
+                            ? FontWeight.w700
+                            : FontWeight.w500,
+                        color: primaryBlue,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 40,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: accentLime,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: primaryBlue.withOpacity(0.8),
-                      ),
-                    ),
-                  ],
-                )
-              : Row(
-                  children: [
-                    const SizedBox(width: 8),
-                    Container(
-                      width: 40,
-                      height: 30,
-                      decoration: BoxDecoration(
-                        color: accentLime,
-                        borderRadius: BorderRadius.circular(5),
-                      ),
-                      child: Icon(
-                        Icons.arrow_forward_ios,
-                        size: 16,
-                        color: primaryBlue.withOpacity(0.8),
+                    const SizedBox(height: 4),
+                    Text(
+                      sudahPilih
+                          ? 'Rp ${sampahTerpilih!['harga_per_kg']} / kg'
+                          : 'Ketuk untuk memilih jenis sampah',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: sudahPilih
+                            ? darkTeal
+                            : darkTeal.withOpacity(0.6),
                       ),
                     ),
                   ],
                 ),
-        ],
+              ),
+
+              // ICON KANAN
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 200),
+                child: sudahPilih
+                    ? const Icon(
+                        Icons.check_circle,
+                        key: ValueKey('check'),
+                        color: primaryBlue,
+                        size: 24,
+                      )
+                    : Icon(
+                        Icons.arrow_forward_ios,
+                        key: const ValueKey('arrow'),
+                        size: 18,
+                        color: darkTeal.withOpacity(0.7),
+                      ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  // --- DETAIL SETORAN (Summary) ---
-  Widget _buildDetailSummary(
-    List<Map<String, dynamic>> items,
-    List<Map<String, dynamic>> sizes,
-    int totalPoin,
-  ) {
-    final rincian = [
-      {
-        'name': 'Botol Plastik',
-        'quantity': sizes[0]['value'],
-        'price': items[0]['price'],
-      },
-      {
-        'name': 'Aluminium',
-        'quantity': sizes[1]['value'],
-        'price': items[1]['price'],
-      },
-    ];
+  Widget _buildInputBerat() {
+    if (sampahTerpilih == null) {
+      return const SizedBox();
+    }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
@@ -564,77 +582,233 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(bottom: 8.0),
-              child: Text(
-                'Detail Setoran',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: primaryBlue,
-                  fontWeight: FontWeight.w900,
+            // Nama sampah
+            Text(
+              sampahTerpilih!['nama'],
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: primaryBlue,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Rp ${sampahTerpilih!['harga_per_kg']} / kg',
+              style: const TextStyle(fontSize: 13, color: darkTeal),
+            ),
+
+            const SizedBox(height: 16),
+
+            // INPUT BERAT
+            Row(
+              children: [
+                const Expanded(
+                  child: Text(
+                    'Berat Sampah (kg)',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: primaryBlue,
+                    ),
+                  ),
                 ),
+
+                // minus
+                _buildCounterButton(
+                  icon: Icons.remove,
+                  onTap: () {
+                    setState(() {
+                      if (beratKg > 0.1) {
+                        beratKg -= 0.1;
+                        beratController.text = beratKg.toStringAsFixed(1);
+                      }
+                    });
+                  },
+                ),
+
+                const SizedBox(width: 8),
+
+                // INPUT MANUAL
+                SizedBox(
+                  width: 70,
+                  child: TextField(
+                    controller: beratController,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.bold,
+                      color: primaryBlue,
+                    ),
+                    decoration: InputDecoration(
+                      contentPadding: const EdgeInsets.symmetric(vertical: 8),
+                      isDense: true,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(8),
+                        borderSide: BorderSide(
+                          color: darkTeal.withOpacity(0.4),
+                        ),
+                      ),
+                    ),
+                    onChanged: (value) {
+                      final parsed = double.tryParse(value);
+                      if (parsed != null && parsed >= 0) {
+                        setState(() {
+                          beratKg = parsed;
+                          beratTerisi = beratKg > 0;
+                        });
+                      }
+                    },
+                  ),
+                ),
+
+                const SizedBox(width: 8),
+
+                // plus
+                _buildCounterButton(
+                  icon: Icons.add,
+                  onTap: () {
+                    setState(() {
+                      beratKg += 0.1;
+                      beratController.text = beratKg.toStringAsFixed(1);
+                    });
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCounterButton({
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          color: accentLime,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(icon, color: primaryBlue, size: 18),
+      ),
+    );
+  }
+
+  Widget _buildDetailSummary() {
+    if (sampahTerpilih == null || beratKg <= 0) {
+      return const SizedBox();
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: lightGreenCard,
+          borderRadius: BorderRadius.circular(10),
+          border: Border.all(color: darkTeal.withOpacity(0.3)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Judul
+            const Text(
+              'Detail Setoran',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                color: primaryBlue,
               ),
             ),
 
-            ...rincian.map(
-              (r) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      '${r['name']} ${r['quantity']} Kg',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: darkTeal,
-                      ),
-                    ),
-                    Text(
-                      r['price'].toString(),
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                        color: darkTeal,
-                      ),
-                    ),
-                  ],
+            const SizedBox(height: 12),
+
+            // Rincian sampah
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  '${sampahTerpilih!['nama']} (${beratKg.toStringAsFixed(1)} kg)',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: darkTeal,
+                  ),
                 ),
-              ),
+                Text(
+                  'Rp ${sampahTerpilih!['harga_per_kg']} / kg',
+                  style: const TextStyle(fontSize: 13, color: darkTeal),
+                ),
+              ],
             ),
 
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
 
-            // ✅ TOTAL POIN
+            // === BOX HIJAU TOTAL ===
             Container(
-              padding: const EdgeInsets.symmetric(vertical: 8.0),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
               decoration: BoxDecoration(
-                color: lightLime, // ✅ WARNA ASLI TIDAK DIUBAH
+                color: lightLime,
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const Text(
-                      'Total Poin',
-                      style: TextStyle(
-                        fontSize: 18,
-                        color: primaryBlue,
-                        fontWeight: FontWeight.w900,
+              child: Column(
+                children: [
+                  // Total Harga
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total Harga',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: primaryBlue,
+                        ),
                       ),
-                    ),
-                    Text(
-                      totalPoin.toString(),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        color: primaryBlue,
-                        fontWeight: FontWeight.w900,
+                      Text(
+                        'Rp ${hitungTotalHarga()}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: primaryBlue,
+                        ),
                       ),
-                    ),
-                  ],
-                ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // Total Poin
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Total Poin',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          color: primaryBlue,
+                        ),
+                      ),
+                      Text(
+                        '${hitungTotalPoin()} poin',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w900,
+                          color: primaryBlue,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -652,8 +826,7 @@ class _SetorSampahPageState extends State<SetorSampahPage> {
         textAlign: TextAlign.left,
         style: const TextStyle(
           fontSize: 16,
-          // FIX: Warna teks di desain adalah primaryBlue, bukan Colors.white
-          color: Colors.white, // Menggunakan primaryBlue (sesuai desain kartu)
+          color: Colors.white,
           fontWeight: FontWeight.w800,
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:hijauin/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -44,7 +45,7 @@ class _AkunPageState extends State<AkunPage> {
     if (token == null) return;
 
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/me'),
+      Uri.parse('${ApiConfig.baseUrl}/me'),
       headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
     );
 
@@ -69,7 +70,7 @@ class _AkunPageState extends State<AkunPage> {
     if (token == null) return;
 
     final response = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/dashboard'),
+      Uri.parse('${ApiConfig.baseUrl}/dashboard'),
       headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
     );
 
@@ -116,12 +117,6 @@ class _AkunPageState extends State<AkunPage> {
               ),
             ]),
 
-            _buildSettingsGroup('Pengaturan Akun', [
-              _buildMenuItem(Icons.menu, 'Aktivitas'),
-              _buildMenuItem(Icons.local_offer, 'Promo'),
-              _buildMenuItem(Icons.credit_card, 'Metode Pembayaran'),
-            ]),
-
             _buildSettingsGroup('Keamanan Akun', [
               _buildMenuItem(Icons.help_outline, 'Pusat Bantuan'),
               _buildMenuItem(Icons.verified_user_outlined, 'Kebijakan Privasi'),
@@ -143,13 +138,13 @@ class _AkunPageState extends State<AkunPage> {
   Widget _buildProfileHeader() {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 50, 16, 24),
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [Color(0xFF4CAF50), Color(0xFF81C784)],
+          colors: [darkTeal, primaryBlue],
         ),
-        borderRadius: BorderRadius.only(
+        borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(24),
           bottomRight: Radius.circular(24),
         ),
@@ -157,16 +152,12 @@ class _AkunPageState extends State<AkunPage> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // FOTO PROFIL DEFAULT (ICON)
           const CircleAvatar(
-            radius: 32,
+            radius: 36,
             backgroundColor: Colors.white,
             child: Icon(Icons.person, size: 36, color: Colors.grey),
           ),
-
           const SizedBox(width: 16),
-
-          // INFO USER
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,15 +168,13 @@ class _AkunPageState extends State<AkunPage> {
                       child: Text(
                         name,
                         style: const TextStyle(
-                          fontSize: 18,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
                         ),
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
-
-                    // TOMBOL EDIT
                     IconButton(
                       icon: const Icon(Icons.edit, color: Colors.white),
                       onPressed: () async {
@@ -195,22 +184,17 @@ class _AkunPageState extends State<AkunPage> {
                             builder: (_) => const EditProfilePage(),
                           ),
                         );
-
                         if (updated == true) {
-                          _loadUserData(); // refresh akun
-                          _loadUserPoints();
+                          _loadUserData();
                         }
                       },
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 4),
                 Text(email, style: const TextStyle(color: Colors.white70)),
-
                 const SizedBox(height: 2),
                 Text(noHp, style: const TextStyle(color: Colors.white70)),
-
                 const SizedBox(height: 2),
                 Text(
                   alamat,
@@ -233,7 +217,11 @@ class _AkunPageState extends State<AkunPage> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [darkTeal, primaryBlue],
+          ),
           borderRadius: BorderRadius.circular(15),
         ),
         child: Row(
@@ -244,7 +232,7 @@ class _AkunPageState extends State<AkunPage> {
               style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: primaryBlue,
+                color: Colors.white,
               ),
             ),
             Icon(Icons.star, color: Colors.orange, size: 30),
@@ -315,7 +303,11 @@ class _AkunPageState extends State<AkunPage> {
         ),
         child: const Text(
           'Keluar',
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
         ),
       ),
     );

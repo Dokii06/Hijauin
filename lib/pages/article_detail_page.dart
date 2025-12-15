@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:hijauin/config/api_config.dart';
 import 'package:hijauin/pages/chat_page.dart';
 
 import 'dart:convert';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 // Asumsi Warna (didefinisikan di global scope atau file utama)
@@ -29,7 +29,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
   String date = '';
   String author = '';
 
-  final String apiBase = 'http://127.0.0.1:8000/api/articles';
+  final String apiBase = '${ApiConfig.baseUrl}/articles';
 
   @override
   void initState() {
@@ -124,7 +124,7 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
                       height: 150,
                       color: darkTeal.withOpacity(0.6),
                       margin: const EdgeInsets.only(
-                        top: 50,
+                        top: 100,
                         left: 16,
                         right: 16,
                       ),
@@ -227,25 +227,6 @@ class _ArticleDetailPageState extends State<ArticleDetailPage> {
             content,
             style: const TextStyle(fontSize: 14, color: Colors.black87),
             textAlign: TextAlign.justify,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildChecklistItem(String text) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.check_box, size: 20, color: darkTeal),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(fontSize: 14, color: Colors.black87),
-            ),
           ),
         ],
       ),

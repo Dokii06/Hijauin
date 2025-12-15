@@ -1,10 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:hijauin/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:hijauin/pages/article_detail_page.dart';
-// import 'path/to/article_model.dart'; // Import model yang baru dibuat
 
-// Asumsi Warna (didefinisikan di global scope atau file utama)
 const Color primaryBlue = Color(0xFF143D60);
 const Color darkTeal = Color(0xFF27667B);
 const Color lightLime = Color(0xFFBFD98A);
@@ -12,7 +11,6 @@ const Color accentLime = Color(0xFFDDEB9D);
 const Color headerAccentBlue = Color(0xFF297EC6);
 const Color buttonGreen = Color(0xFFA0C878);
 
-// Placeholder untuk ArticleModel jika Anda belum membuat file terpisah
 class ArticleModel {
   final int id;
   final String title;
@@ -39,7 +37,6 @@ class ArticleModel {
     );
   }
 }
-// END Placeholder ArticleModel
 
 class EducationPage extends StatefulWidget {
   const EducationPage({super.key});
@@ -51,8 +48,7 @@ class EducationPage extends StatefulWidget {
 class _EducationPageState extends State<EducationPage> {
   List<ArticleModel> articles = [];
   bool isLoading = true;
-  // Ganti dengan URL API Laravel Anda
-  final String apiUrl = 'http://127.0.0.1:8000/api/articles';
+  final String apiUrl = '${ApiConfig.baseUrl}/articles';
 
   @override
   void initState() {
@@ -66,7 +62,6 @@ class _EducationPageState extends State<EducationPage> {
       final response = await http.get(Uri.parse(apiUrl));
 
       if (response.statusCode == 200) {
-        // Asumsi API mengembalikan JSON dengan key 'data' atau langsung array
         final Map<String, dynamic> decodedData = json.decode(response.body);
         final List<dynamic> articleJson = decodedData['data'] ?? [];
 
@@ -77,7 +72,6 @@ class _EducationPageState extends State<EducationPage> {
           isLoading = false;
         });
       } else {
-        // Handle error selain 200
         setState(() {
           isLoading = false;
         });
@@ -108,7 +102,6 @@ class _EducationPageState extends State<EducationPage> {
           children: [
             _buildCustomAppBar(context),
 
-            // Tampilkan Loading atau Daftar Artikel
             Expanded(
               child: isLoading
                   ? const Center(
@@ -130,12 +123,8 @@ class _EducationPageState extends State<EducationPage> {
     );
   }
 
-  // --- WIDGET HELPER LAINNYA ---
-
   Widget _buildCustomAppBar(BuildContext context) {
     final double statusBarHeight = MediaQuery.of(context).padding.top;
-
-    // ... (Kode _buildCustomAppBar Anda tetap sama, menggunakan variabel warna)
     return Container(
       width: double.infinity,
       padding: EdgeInsets.only(top: statusBarHeight),
@@ -206,7 +195,6 @@ class _EducationPageState extends State<EducationPage> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Gambar Thumbnail (Menggunakan Network Image)
             Container(
               width: 100,
               height: 100,
@@ -216,9 +204,8 @@ class _EducationPageState extends State<EducationPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
-                // Ganti dengan NetworkImage
                 child: Image.network(
-                  article.image, // URL Gambar dari Database
+                  article.image,
                   fit: BoxFit.cover,
                   errorBuilder: (context, error, stackTrace) {
                     return const Center(
@@ -261,7 +248,6 @@ class _EducationPageState extends State<EducationPage> {
                       height: 35,
                       child: ElevatedButton(
                         onPressed: () {
-                          // Navigasi ke Halaman Detail Artikel (Passing data)
                           Navigator.push(
                             context,
                             MaterialPageRoute(
