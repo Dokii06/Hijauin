@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:hijauin/config/api_config.dart';
 import 'package:http/http.dart' as http;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -41,7 +42,7 @@ class _RiwayatSetoranPageState extends State<RiwayatSetoranPage> {
       }
 
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/setoran'),
+        Uri.parse('${ApiConfig.baseUrl}/setoran'),
         headers: {
           'Authorization': 'Bearer $token',
           'Accept': 'application/json',

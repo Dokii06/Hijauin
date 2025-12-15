@@ -13,9 +13,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  // Warna Identitas Hijauin
-  static const Color darkTeal = Color(0xFF27667B);
-  static const Color lightLime = Color(0xFFA0C878);
   static const Color primaryBlue = Color(0xFF143D60);
 
   // Controller
@@ -355,25 +352,6 @@ class _LoginPageState extends State<LoginPage> {
           child: Image.asset(iconPath, fit: BoxFit.contain),
         ),
       ),
-    );
-  }
-
-  // ======================= FIELD CONTAINER =======================
-  Widget _inputContainer({required Widget child}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.08),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: child,
     );
   }
 }

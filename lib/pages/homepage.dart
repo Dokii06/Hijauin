@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:hijauin/config/api_config.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:hijauin/main.dart';
 import 'package:hijauin/pages/education_page.dart';
@@ -43,7 +44,7 @@ class _HomepageState extends State<Homepage> {
     if (token == null) return;
 
     final res = await http.get(
-      Uri.parse('http://127.0.0.1:8000/api/dashboard'),
+      Uri.parse('${ApiConfig.baseUrl}/dashboard'),
       headers: {'Authorization': 'Bearer $token', 'Accept': 'application/json'},
     );
 
@@ -218,7 +219,7 @@ class _HomepageState extends State<Homepage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "$userPoints",
+                          "$userPoints".toString(),
                           style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w900,

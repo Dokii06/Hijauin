@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 
-// Warna Identitas Hijauin (disinkronkan dari file-file sebelumnya)
-const Color primaryBlue = Color(0xFF143D60); // Biru Tua
-const Color darkTeal = Color(0xFF27667B); // Teal Gelap
-const Color accentLime = Color(0xFFDDEB9D); // Hijau Muda Terang
-const Color headerAccentBlue = Color(0xFF297EC6); // Aksen Biru di Header
-const Color badgeGreen = Color(0xFF4CAF50); // Hijau untuk Badge notifikasi
-
-// --- WARNA GRADIENT BARU ---
-const Color startColor = Color(0xFFDDEB9D); // 0%
-const Color middleColor = Color(0xFFA0C878); // 45%
-const Color endColor = Color(0xFF143D60); // 100%
+const Color primaryBlue = Color(0xFF143D60);
+const Color darkTeal = Color(0xFF27667B);
+const Color accentLime = Color(0xFFDDEB9D);
+const Color headerAccentBlue = Color(0xFF297EC6);
+const Color badgeGreen = Color(0xFF4CAF50);
+const Color startColor = Color(0xFFDDEB9D);
+const Color middleColor = Color(0xFFA0C878);
+const Color endColor = Color(0xFF143D60);
 
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
@@ -57,24 +54,20 @@ class ChatPage extends StatelessWidget {
         // ===================================
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            // Arah: dari atas kanan ke bawah kiri
             begin: Alignment.topRight,
             end: Alignment.bottomLeft,
             colors: [startColor, middleColor, endColor],
-            stops: [0.0, 0.45, 1.0], // Stops yang diminta
+            stops: [0.0, 0.45, 1.0],
           ),
         ),
         child: Column(
           children: [
-            // 1. App Bar Kustom dengan Gradient Biru
             _buildCustomAppBar(context),
-            // 2. Daftar Chat (Expand agar mengisi sisa ruang)
             Expanded(
               child: ListView.builder(
                 padding: const EdgeInsets.only(top: 10),
                 itemCount: chatList.length,
                 itemBuilder: (context, index) {
-                  // Meneruskan data chat ke item builder
                   return _buildChatListItem(chatList[index]);
                 },
               ),
@@ -103,7 +96,7 @@ class ChatPage extends StatelessWidget {
         ),
       ),
       child: Container(
-        height: 72, // 🔑 tinggi konten appbar (atur di sini)
+        height: 72,
         alignment: Alignment.centerLeft,
         child: Stack(
           children: [
@@ -118,7 +111,6 @@ class ChatPage extends StatelessWidget {
               ),
             ),
 
-            // Judul (center secara vertikal)
             Align(
               alignment: Alignment.centerLeft,
               child: Padding(
@@ -139,7 +131,6 @@ class ChatPage extends StatelessWidget {
     );
   }
 
-  // --- 2. Item Daftar Chat (MODIFIKASI: Tambah Divider Putih) ---
   Widget _buildChatListItem(Map<String, dynamic> chat) {
     bool hasUnread = chat['unread'] > 0;
 
@@ -147,10 +138,8 @@ class ChatPage extends StatelessWidget {
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          // Hapus margin bottom (diganti oleh Divider)
           child: Row(
-            crossAxisAlignment:
-                CrossAxisAlignment.center, // Pusatkan secara vertikal
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               // Avatar/Ikon
               CircleAvatar(
@@ -174,7 +163,7 @@ class ChatPage extends StatelessWidget {
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
-                        color: Colors.black, // Warna Nama Chat (Hitam)
+                        color: Colors.black,
                       ),
                     ),
                     const SizedBox(height: 4),
@@ -202,9 +191,7 @@ class ChatPage extends StatelessWidget {
                     chat['time'] as String,
                     style: TextStyle(
                       fontSize: 12,
-                      color: hasUnread
-                          ? badgeGreen
-                          : Colors.black, // Warna Waktu
+                      color: hasUnread ? badgeGreen : Colors.black,
                       fontWeight: hasUnread
                           ? FontWeight.bold
                           : FontWeight.normal,
@@ -215,7 +202,7 @@ class ChatPage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(7),
                       decoration: const BoxDecoration(
-                        color: Colors.white, // Badge putih
+                        color: Colors.white,
                         shape: BoxShape.circle,
                       ),
                       child: Text(
@@ -239,7 +226,7 @@ class ChatPage extends StatelessWidget {
           color: Colors.white,
           height: 1,
           thickness: 1,
-          indent: 80, // Indentasi agar garis dimulai setelah avatar
+          indent: 80,
           endIndent: 16,
         ),
       ],

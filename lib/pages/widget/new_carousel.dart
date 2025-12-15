@@ -44,7 +44,7 @@ class _NewsCarouselState extends State<NewsCarousel> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(_itemCount, (index) {
-            return _buildDotIndicator(index); // Panggil fungsi pembangun titik
+            return _buildDotIndicator(index);
           }),
         ),
       ],
