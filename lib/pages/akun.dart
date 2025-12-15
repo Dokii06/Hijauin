@@ -3,6 +3,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'edit_profile.dart';
+import 'riwayat_setoran_page.dart';
 
 // ===================== WARNA =====================
 const Color primaryBlue = Color(0xFF143D60);
@@ -99,6 +100,21 @@ class _AkunPageState extends State<AkunPage> {
             _buildProfileHeader(),
             _buildPointCard(),
             _buildOrderHistorySection(),
+
+            _buildSettingsGroup('Riwayat Setor Sampah', [
+              _buildMenuItem(
+                Icons.history,
+                'Riwayat Setoran',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const RiwayatSetoranPage(),
+                    ),
+                  );
+                },
+              ),
+            ]),
 
             _buildSettingsGroup('Pengaturan Akun', [
               _buildMenuItem(Icons.menu, 'Aktivitas'),
@@ -275,12 +291,12 @@ class _AkunPageState extends State<AkunPage> {
     );
   }
 
-  Widget _buildMenuItem(IconData icon, String title) {
+  Widget _buildMenuItem(IconData icon, String title, {VoidCallback? onTap}) {
     return ListTile(
       leading: Icon(icon, color: primaryBlue),
       title: Text(title),
       trailing: const Icon(Icons.arrow_forward_ios, size: 16),
-      onTap: () {},
+      onTap: onTap,
     );
   }
 
