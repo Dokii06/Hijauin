@@ -34,7 +34,7 @@ This project is a starting point for a Flutter application.
    static const String baseUrl = 'http://<your-server-ip>:8000/api';
   
 4. Run the app
-   ```
+   ```bash
    flutter run
 
 ### API
