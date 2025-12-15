@@ -26,10 +26,13 @@ class _AkunPageState extends State<AkunPage> {
   String noHp = '-';
   String alamat = '-';
 
+  int userPoints = 0;
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadUserPoints();
   }
 
   // ===================== LOAD USER DATA =====================
@@ -53,6 +56,26 @@ class _AkunPageState extends State<AkunPage> {
         email = user['email'] ?? '-';
         noHp = user['no_hp'] ?? '-';
         alamat = user['alamat'] ?? '-';
+      });
+    }
+  }
+
+  // ================ LOAD USER POINT =================
+  Future<void> _loadUserPoints() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token');
+
+    if (token == null) return;
+
+    final response = await http.get(
+      Uri.parse('http://127.0.0.1:8000/api/dashboard'),
+      headers: {'Accept': 'application/json', 'Authorization': 'Bearer $token'},
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      setState(() {
+        userPoints = data['points'] ?? 0;
       });
     }
   }
@@ -159,6 +182,7 @@ class _AkunPageState extends State<AkunPage> {
 
                         if (updated == true) {
                           _loadUserData(); // refresh akun
+                          _loadUserPoints();
                         }
                       },
                     ),
@@ -196,12 +220,12 @@ class _AkunPageState extends State<AkunPage> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(15),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Poin Anda\n32.000',
-              style: TextStyle(
+              'Poin Anda\n$userPoints',
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: primaryBlue,
